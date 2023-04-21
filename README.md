@@ -1,5 +1,5 @@
 # cuddly-octo-lamp
-Simple parser from HTML to CSV 
+Copiando colunas de dados do cronograma do SARC para o cronograma do Atas
 
 
 # Programa executável
