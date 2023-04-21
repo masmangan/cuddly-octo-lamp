@@ -6,6 +6,8 @@ Copiando colunas de dados do cronograma do SARC para o cronograma do Atas
 
 Programa compilado para macOS, disponível em "Releases".
 
+No Finder, utilize Ctrl+Open para habilitar a execução do programa s2a.
+
 # Instruções para compilação
 
 No terminal, digite:
