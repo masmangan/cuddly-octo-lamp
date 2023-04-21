@@ -2,10 +2,27 @@
 Simple parser from HTML to CSV 
 
 
+# Programa executável
+
+Programa compilado para OS X, disponível em "Releases".
+
+# Instruções para compilação
+
+No terminal, digite:
+
+```
+% git clone https://github.com/masmangan/cuddly-octo-lamp.git
+% cd cuddly-octo-lamp
+% gcc `xml2-config --cflags --libs` -o s2a s2a.c
+```
+
+
 # Utilização:
 
 Passo 1) Escolha uma turma, neste caso a turma 13 da disciplina 4645G.
+
 Passo 2) Exporte o cronograma da turma a partir do SARC.
+
 Passo 3) Exporte o cronograma da turma a partir do Atas.
 
 Na pasta, os dois arquivos deve estar visíveis. 
