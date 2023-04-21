@@ -76,7 +76,6 @@
 #define ATIVIDADE 5
 #define RECURSOS 6
 
-// #include<iostream.h>
 
 // https://stackoverflow.com/questions/26522583/c-strtok-skips-second-token-or-consecutive-delimiter
 char *strtok2(char *string, char const *delimiter)
@@ -160,7 +159,55 @@ char *getclass(char *s)
     return back;
 }
 
+void usage()
+{
+    printf("Utilização:\n\t./s2a <cronograma do SARC em HTML> <cronograma do Atas em CSV>\n");
+    exit(0);
+}
+
 #ifdef LIBXML_TREE_ENABLED
+
+
+
+int i = 0;
+int jumpHeader = 1;
+xmlChar *lastdescription;
+char *sarc_filename;
+char *atas_filename;
+char tmp_atas[100] = "tmp-atas-XXXXXX";
+char tmp_sarc[100] = "tmp-sarc-XXXXXX";
+
+FILE *fd_atas;
+FILE *fd_sarc_tmp;
+
+char line[400];
+
+/* 
+ * removes refer attribute from SARC file 
+ * writes temp file as global tmp2
+ */
+void fixrefer(char *source)
+{
+    printf("Fixing SARC file refer boolean attribute...\n");
+    FILE *f = fopen(source, "r");
+
+    int ok = mkstemp(tmp_sarc);
+    if (ok == -1)
+    {
+        printf("   *** Error: temporary file could not be created! Bye!\n");
+        exit(2);
+    }
+    //printf("\nTEMP FILE: %s\n", tmp2);
+    FILE *fd_fix = fopen(tmp_sarc, "w");
+
+    /* removes lines with scripts to remove refer attribute error */
+    while (fgets(line, 300, f))
+        if (!strstr(line, "<script defer src=") && !strstr(line, "></script>"))
+            fputs(line, fd_fix);
+
+    fclose(fd_fix);
+}
+
 
 /**
  * print_element_names:
@@ -169,20 +216,6 @@ char *getclass(char *s)
  * Prints values of selected xml elements
  * that are siblings or children of a given xml node.
  */
-
-int i = 0;
-int jumpHeader = 1;
-xmlChar *lastdescription;
-char *source;
-char *target;
-char tmp[100] = "tmp-atas-XXXXXX";
-char tmp2[100] = "tmp-sarc-XXXXXX";
-FILE *t;
-FILE *fd;
-FILE *fd_tmp;
-
-char line[400];
-
 static void
 print_element_names(xmlNode *a_node)
 {
@@ -219,29 +252,22 @@ print_element_names(xmlNode *a_node)
                 char *id = getid(h1);
                 char t[100];
                 sprintf(t, "%s-%s", id, class);
-                if (strstr(target, t))
+                if (strstr(atas_filename, t))
                 {
                     printf("Arquivos são de turmas diferentes!");
                     exit(1);
                 }
-                fd = fopen(target, "r");
-                // while(fgets(line, 300, fd)){
-                //	printf("      %s\n", line);
-                // }
-                // t = fopen(target, "r");
-                int ok = mkstemp(tmp);
+                fd_atas = fopen(atas_filename, "r");
+
+                int ok = mkstemp(tmp_atas);
                 if (ok == -1)
                 {
                     exit(2);
                 }
-                //printf("\nTEMP FILE: %s\n", tmp);
-                fd_tmp = fopen(tmp, "w");
+                fd_sarc_tmp = fopen(tmp_atas, "w");
 
-                fgets(line, 300, fd);
-                fputs(line, fd_tmp);
-                // printf("\n%s-%s\n\n", trim((char *)xmlNodeGetContent(cur_node)));
-
-                //                printf("cd_tipo_aula;tx_plano_aula;\n");
+                fgets(line, 300, fd_atas);
+                fputs(line, fd_sarc_tmp);
             }
 
             if (!strcmp("td", (const char *)(cur_node->name)))
@@ -253,29 +279,26 @@ print_element_names(xmlNode *a_node)
 
                 if (i % 7 == ATIVIDADE)
                 {
-                    fgets(line, 300, fd);
+                    fgets(line, 300, fd_atas);
                     char *duh = trim(line);
-                    //printf("%s\n", duh);
 
                     char *token;
                     token = strtok2(duh, ";");
-                    fprintf(fd_tmp, "%s;", token);
+                    fprintf(fd_sarc_tmp, "%s;", token);
                     token = strtok2(NULL, ";");
-                    fprintf(fd_tmp, "%s;", token);
+                    fprintf(fd_sarc_tmp, "%s;", token);
                     token = strtok2(NULL, ";");
-                    fprintf(fd_tmp, "%s;", token);
+                    fprintf(fd_sarc_tmp, "%s;", token);
                     token = strtok2(NULL, ";");
-                    fprintf(fd_tmp, "%s;", token);
+                    fprintf(fd_sarc_tmp, "%s;", token);
                     token = strtok2(NULL, ";");
-                    fprintf(fd_tmp, "%s;", token);
+                    fprintf(fd_sarc_tmp, "%s;", token);
                     token = strtok2(NULL, ";");
-                    // fprintf(fd_tmp, "%s;", token);
                     token = strtok2(NULL, ";");
-                    // fprintf(fd_tmp, "%s;", token);
-                    fprintf(fd_tmp, "%d;%s;", ativ(trim((char *)xmlNodeGetContent(cur_node))),
+                    fprintf(fd_sarc_tmp, "%d;%s;", ativ(trim((char *)xmlNodeGetContent(cur_node))),
                             trim((char *)lastdescription));
                     token = strtok2(NULL, ";");
-                    fprintf(fd_tmp, "%s;\n", token ? token : "");
+                    fprintf(fd_sarc_tmp, "%s;\n", token ? token : "");
                     xmlFree(lastdescription);
                 }
                 i++;
@@ -291,7 +314,6 @@ print_element_names(xmlNode *a_node)
  * walk down the DOM, and print
  * selected XML	elements  value.
  */
-
 int main(int argc, char **argv)
 {
     xmlDoc *doc = NULL;
@@ -299,35 +321,25 @@ int main(int argc, char **argv)
 
     LIBXML_TEST_VERSION
 
-    source = argv[1];
-    target = argv[2];
-
-    /* removes refer from original SARC file */
-    printf("Fixing SARC file refer boolean attribute...\n");
-    FILE *f = fopen(source, "r");
-
-    int ok = mkstemp(tmp2);
-    if (ok == -1)
+    if (argc != 3)
     {
-        printf("TEMP!");
-        exit(2);
+        usage();
     }
-    //printf("\nTEMP FILE: %s\n", tmp2);
-    fd_tmp = fopen(tmp2, "w");
 
-    while (fgets(line, 300, f))
-        if (!strstr(line, "<script defer src=") && !strstr(line, "></script>"))
-            fputs(line, fd_tmp);
-    fclose(fd_tmp);
+    sarc_filename = argv[1];
+    atas_filename = argv[2];
+
+    fixrefer(sarc_filename);
 
     /* starts DOM parsing from temp SARC file */
 
     printf("Parsing SARC file...\n");
-    doc = xmlReadFile(tmp2, NULL, 0);
+    doc = xmlReadFile(tmp_sarc, NULL, 0);
 
     if (doc == NULL)
     {
-        printf("error: could not parse file %s\n", tmp2);
+        printf("   ***Error: could not parse temporary file %s\n", tmp_sarc);
+        exit(10);
     }
 
     i = 0;
@@ -339,9 +351,12 @@ int main(int argc, char **argv)
     xmlFreeDoc(doc);
     xmlCleanupParser();
 
-    remove(tmp2);
-    remove(target);
-    rename(tmp, target);
+    fclose(fd_atas);
+    fclose(fd_sarc_tmp);
+
+    remove(tmp_sarc);
+    remove(atas_filename);
+    rename(tmp_atas, atas_filename);
     return 0;
 }
 #else
