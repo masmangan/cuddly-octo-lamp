@@ -50,12 +50,53 @@
 
 #include <stdio.h>
 
-#include<fcntl.h>
+#include <fcntl.h>
 
 #include <dirent.h>
 
 #include <libxml/parser.h>
 #include <libxml/tree.h>
+
+
+// ATAS
+#define CD_DISCIPLINA_ORIGEM 0
+#define CD_DISCIPLINA 1
+#define CD_TURMA 2
+#define NR_CREDITO 3
+#define NR_AULA 4
+#define CD_TIPO_AULA 5
+#define TX_PLANO_AULA 6
+#define DT_AULA 7
+
+// SARC
+#define NUMERO 0
+#define DIA 1
+#define DATA 2
+#define HORA 3
+#define DESCRICAO 4
+#define ATIVIDADE 5
+#define RECURSOS 6
+
+// #include<iostream.h>
+
+// https://stackoverflow.com/questions/26522583/c-strtok-skips-second-token-or-consecutive-delimiter
+char *strtok2(char *string, char const *delimiter)
+{
+    static char *source = NULL;
+    char *p, *riturn = 0;
+    if (string != NULL)
+        source = string;
+    if (source == NULL)
+        return NULL;
+
+    if ((p = strpbrk(source, delimiter)) != NULL)
+    {
+        *p = 0;
+        riturn = source;
+        source = ++p;
+    }
+    return riturn;
+}
 
 char *ltrim(char *s)
 {
@@ -133,8 +174,10 @@ char *getclass(char *s)
 int i = 0;
 int jumpHeader = 1;
 xmlChar *lastdescription;
+char *source;
 char *target;
-char tmp[100] = "tmp-s2a-XXXXXX.tmp";
+char tmp[100] = "tmp-atas-XXXXXX";
+char tmp2[100] = "tmp-sarc-XXXXXX";
 FILE *t;
 FILE *fd;
 FILE *fd_tmp;
@@ -154,7 +197,7 @@ print_element_names(xmlNode *a_node)
             {
                 xmlChar *style = xmlGetProp(cur_node, (const xmlChar *)"style");
 
-                if (strstr((char *)style, "background-color:Red"))
+                if (strstr((char *)style, "background-color:Red")||  strstr((char *)style, "background-color:LightGrey"))
                 {
                     xmlFree(style);
                     continue;
@@ -182,37 +225,58 @@ print_element_names(xmlNode *a_node)
                     printf("Arquivos são de turmas diferentes!");
                     exit(1);
                 }
-    fd = fopen(target, "r" );
-    //while(fgets(line, 300, fd)){
-//	printf("      %s\n", line);
-  // }
-                //t = fopen(target, "r");
+                fd = fopen(target, "r");
+                // while(fgets(line, 300, fd)){
+                //	printf("      %s\n", line);
+                // }
+                // t = fopen(target, "r");
                 int ok = mkstemp(tmp);
-		if (ok == -1)
-		{
-			exit(2);
-		}
+                if (ok == -1)
+                {
+                    exit(2);
+                }
                 printf("\nTEMP FILE: %s\n", tmp);
-		fd_tmp = fopen(tmp, "w");
+                fd_tmp = fopen(tmp, "w");
 
-    fgets(line, 300, fd);
-fputs(line, fd_tmp);
+                fgets(line, 300, fd);
+                fputs(line, fd_tmp);
                 // printf("\n%s-%s\n\n", trim((char *)xmlNodeGetContent(cur_node)));
 
-                printf("cd_tipo_aula;tx_plano_aula;\n");
+                //                printf("cd_tipo_aula;tx_plano_aula;\n");
             }
 
             if (!strcmp("td", (const char *)(cur_node->name)))
             {
-                if (i % 7 == 4)
+                if (i % 7 == DESCRICAO)
                 {
                     lastdescription = xmlNodeGetContent(cur_node);
                 }
 
-                if (i % 7 == 5)
+                if (i % 7 == ATIVIDADE)
                 {
-                    printf("%d;%s;\n", ativ(trim((char *)xmlNodeGetContent(cur_node))),
-                           trim((char *)lastdescription));
+                    fgets(line, 300, fd);
+                    char *duh = trim(line);
+                    printf("%s\n", duh);
+
+                    char *token;
+                    token = strtok2(duh, ";");
+                    fprintf(fd_tmp, "%s; ", token);
+                    token = strtok2(NULL, ";");
+                    fprintf(fd_tmp, "%s; ", token);
+                    token = strtok2(NULL, ";");
+                    fprintf(fd_tmp, "%s; ", token);
+                    token = strtok2(NULL, ";");
+                    fprintf(fd_tmp, "%s; ", token);
+                    token = strtok2(NULL, ";");
+                    fprintf(fd_tmp, "%s; ", token);
+                    token = strtok2(NULL, ";");
+                    // fprintf(fd_tmp, "%s; ", token);
+                    token = strtok2(NULL, ";");
+                    // fprintf(fd_tmp, "%s; ", token);
+                    fprintf(fd_tmp, "%d; \"%s\"; ", ativ(trim((char *)xmlNodeGetContent(cur_node))),
+                            trim((char *)lastdescription));
+                    token = strtok2(NULL, ";");
+                    fprintf(fd_tmp, "%s;\n", token?token:"");
                     xmlFree(lastdescription);
                 }
                 i++;
@@ -221,16 +285,6 @@ fputs(line, fd_tmp);
 
         print_element_names(cur_node->children);
     }
-}
-
-void usage()
-{
-    printf("Passo 1) crie uma pasta\n");
-    printf("Passo 2) copie este programa para a pasta criada\n");
-    printf("Passo 3) exporte todos os cronogramas de turmas no SARC para a pasta criada\n");
-    printf("Passo 4) exporte todos as cronogramas de turmas do Atas para a pasta criada\n");
-    printf("Passo 5) execute este programa\n");
-    printf("Passo 6) importe os cronogramas de turma no Atas\n");
 }
 
 /**
@@ -246,12 +300,35 @@ int main(int argc, char **argv)
 
     LIBXML_TEST_VERSION
 
+    source = argv[1];
     target = argv[2];
-    doc = xmlReadFile(argv[1], NULL, 0);
+
+    /* removes refer from original SARC file */
+    printf("Fixing SARC file refer boolean attribute...\n");
+    FILE *f = fopen(source, "r");
+
+    int ok = mkstemp(tmp2);
+    if (ok == -1)
+    {
+        printf("TEMP!");
+        exit(2);
+    }
+    printf("\nTEMP FILE: %s\n", tmp2);
+    fd_tmp = fopen(tmp2, "w");
+
+    while (fgets(line, 300, f))
+        if (!strstr(line, "<script defer src=") && !strstr(line, "></script>"))
+            fputs(line, fd_tmp);
+    fclose(fd_tmp);
+
+    /* starts DOM parsing from temp SARC file */
+
+    printf("Parsing SARC file...\n");
+    doc = xmlReadFile(tmp2, NULL, 0);
 
     if (doc == NULL)
     {
-        printf("error: could not parse file %s\n", argv[1]);
+        printf("error: could not parse file %s\n", tmp2);
     }
 
     i = 0;
@@ -262,6 +339,8 @@ int main(int argc, char **argv)
 
     xmlFreeDoc(doc);
     xmlCleanupParser();
+
+    remove(tmp2);
 
     return 0;
 }
