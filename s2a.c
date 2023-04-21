@@ -57,7 +57,6 @@
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 
-
 // ATAS
 #define CD_DISCIPLINA_ORIGEM 0
 #define CD_DISCIPLINA 1
@@ -197,7 +196,7 @@ print_element_names(xmlNode *a_node)
             {
                 xmlChar *style = xmlGetProp(cur_node, (const xmlChar *)"style");
 
-                if (strstr((char *)style, "background-color:Red")||  strstr((char *)style, "background-color:LightGrey"))
+                if (strstr((char *)style, "background-color:Red") || strstr((char *)style, "background-color:LightGrey"))
                 {
                     xmlFree(style);
                     continue;
@@ -235,7 +234,7 @@ print_element_names(xmlNode *a_node)
                 {
                     exit(2);
                 }
-                printf("\nTEMP FILE: %s\n", tmp);
+                //printf("\nTEMP FILE: %s\n", tmp);
                 fd_tmp = fopen(tmp, "w");
 
                 fgets(line, 300, fd);
@@ -256,27 +255,27 @@ print_element_names(xmlNode *a_node)
                 {
                     fgets(line, 300, fd);
                     char *duh = trim(line);
-                    printf("%s\n", duh);
+                    //printf("%s\n", duh);
 
                     char *token;
                     token = strtok2(duh, ";");
-                    fprintf(fd_tmp, "%s; ", token);
+                    fprintf(fd_tmp, "%s;", token);
                     token = strtok2(NULL, ";");
-                    fprintf(fd_tmp, "%s; ", token);
+                    fprintf(fd_tmp, "%s;", token);
                     token = strtok2(NULL, ";");
-                    fprintf(fd_tmp, "%s; ", token);
+                    fprintf(fd_tmp, "%s;", token);
                     token = strtok2(NULL, ";");
-                    fprintf(fd_tmp, "%s; ", token);
+                    fprintf(fd_tmp, "%s;", token);
                     token = strtok2(NULL, ";");
-                    fprintf(fd_tmp, "%s; ", token);
+                    fprintf(fd_tmp, "%s;", token);
                     token = strtok2(NULL, ";");
-                    // fprintf(fd_tmp, "%s; ", token);
+                    // fprintf(fd_tmp, "%s;", token);
                     token = strtok2(NULL, ";");
-                    // fprintf(fd_tmp, "%s; ", token);
-                    fprintf(fd_tmp, "%d; \"%s\"; ", ativ(trim((char *)xmlNodeGetContent(cur_node))),
+                    // fprintf(fd_tmp, "%s;", token);
+                    fprintf(fd_tmp, "%d;%s;", ativ(trim((char *)xmlNodeGetContent(cur_node))),
                             trim((char *)lastdescription));
                     token = strtok2(NULL, ";");
-                    fprintf(fd_tmp, "%s;\n", token?token:"");
+                    fprintf(fd_tmp, "%s;\n", token ? token : "");
                     xmlFree(lastdescription);
                 }
                 i++;
@@ -313,7 +312,7 @@ int main(int argc, char **argv)
         printf("TEMP!");
         exit(2);
     }
-    printf("\nTEMP FILE: %s\n", tmp2);
+    //printf("\nTEMP FILE: %s\n", tmp2);
     fd_tmp = fopen(tmp2, "w");
 
     while (fgets(line, 300, f))
@@ -341,7 +340,8 @@ int main(int argc, char **argv)
     xmlCleanupParser();
 
     remove(tmp2);
-
+    remove(target);
+    rename(tmp, target);
     return 0;
 }
 #else
