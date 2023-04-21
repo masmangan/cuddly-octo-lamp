@@ -19,7 +19,7 @@ No terminal, digite:
 
 # Utilização:
 
-Passo 1) Escolha uma turma, neste caso a turma 13 da disciplina 4645G.
+Passo 1) Escolha uma turma, neste exemplo, a turma 13 da disciplina 4645G.
 
 Passo 2) Exporte o cronograma da turma a partir do SARC.
 
@@ -47,7 +47,7 @@ Primeiro o arquivo do SARC.
 ```
 % ./s2a cronograma.html 4645G-04-13-2023-1-24707-2042023214952.csv 
 ```
-O arquivo do Atas deve ser alterado.
+O arquivo do Atas é preenchido com as colunas atividade e descrição provenientes do arquivo do SARC.
 
 Passo 5) Importe o cronograma da turma de volta para o Atas.
 
