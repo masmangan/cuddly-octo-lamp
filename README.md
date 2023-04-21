@@ -4,7 +4,7 @@ Simple parser from HTML to CSV
 
 # Programa executável
 
-Programa compilado para OS X, disponível em "Releases".
+Programa compilado para macOS, disponível em "Releases".
 
 # Instruções para compilação
 
@@ -25,17 +25,18 @@ Passo 2) Exporte o cronograma da turma a partir do SARC.
 
 Passo 3) Exporte o cronograma da turma a partir do Atas.
 
-Na pasta, os dois arquivos deve estar visíveis. 
+Na pasta, os dois arquivos de cronograma devem estar visíveis. 
+
 ```
 % ls
 4645G-04-13-2023-1-24707-1542023175141.csv
 cronograma.html
 ```
 
-Passo 4) Preencha o arquivo de cronograma do Atas com os dados do arquivo de cronograma do SARC
+Passo 4) Utilize o s2a para preencher o arquivo de cronograma do Atas com os dados do arquivo de cronograma do SARC.
 
 ```
-% ./s2a cronograma-35.html 4645G-04-13-2023-1-24707-2042023214952.csv 
+% ./s2a cronograma.html 4645G-04-13-2023-1-24707-2042023214952.csv 
 ```
 
 Passo 5) Importe o cronograma da turma de volta para o Atas.
