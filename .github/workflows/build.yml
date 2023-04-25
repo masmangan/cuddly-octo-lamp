@@ -19,6 +19,7 @@ jobs:
         uses: SonarSource/sonarcloud-github-c-cpp@v1
       - name: Run build-wrapper
         run: |
+          sudo apt-get install libxml2-dev        
           export CFLAGS=`xml2-config --cflags --libs`
           autoreconf --install
           ./configure --with-libxml2=yes        
