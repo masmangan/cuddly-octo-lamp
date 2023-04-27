@@ -20,7 +20,7 @@ jobs:
       - name: Run build-wrapper
         run: |
           sudo apt-get install libxml2-dev        
-          export CFLAGS=`xml2-config --cflags --libs`
+          export CFLAGS=`xml2-config --cflags --libs` -static
           autoreconf --install
           ./configure        
           build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} make clean all
