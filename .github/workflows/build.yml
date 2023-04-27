@@ -19,9 +19,9 @@ jobs:
         uses: SonarSource/sonarcloud-github-c-cpp@v1
       - name: Run build-wrapper
         run: |
-          sudo apt-get install libxml2-dev     
-          sudo apt-get install binutils
-          export CFLAGS+="`xml2-config --cflags --libs`"
+          # sudo apt-get install libxml2-dev     
+          # sudo apt-get install binutils
+          export CFLAGS="`xml2-config --cflags --libs`"
           autoreconf --install
           ./configure        
           build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} make clean all
